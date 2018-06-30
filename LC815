@@ -1,0 +1,38 @@
+class LC815 {
+    public int numBusesToDestination(int[][] routes, int S, int T) {
+        if (S == T) return 0;
+        int[] visited = new int[routes.length];
+        Queue<Integer> queue = new LinkedList<>();
+        Map<Integer, Set<Integer>> stopToBus = new HashMap<>();
+        for (int i = 0; i < routes.length; i++) {
+            for (int j = 0; j < routes[i].length; j++) {
+                stopToBus.putIfAbsent(routes[i][j], new HashSet<>());
+                stopToBus.get(routes[i][j]).add(i);
+                if (routes[i][j] == S) {
+                    queue.offer(i);
+                    // visited[i] = 1;
+                    // break;
+                }
+            }
+        }
+        if (!stopToBus.containsKey(T)) return -1;
+        int step = 1;
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                int bus = queue.poll();
+                if (visited[bus] == 1) continue;
+                visited[bus] = 1;
+                for (int busStop : routes[bus]) {
+                    if (busStop == T) return step;
+                    for (int nextBus : stopToBus.get(busStop)) {
+                        if (visited[nextBus] == 1) continue;
+                        queue.offer(nextBus);
+                    }
+                }
+            }
+            step++;
+        }
+        return -1;
+    }
+}

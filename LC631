@@ -1,0 +1,112 @@
+class Excel {
+
+    int[][] grid;
+    Map<String, Integer> map;
+    Map<String, Map<String, Integer>> sumToNum;
+    Map<String, Map<String, Integer>> numToSum;
+    public Excel(int H, char W) {
+        // grid = new int[H + 1][W - 'A' + 1];
+        sumToNum = new HashMap<>();
+        numToSum = new HashMap<>();
+        map = new HashMap<>();
+    }
+    
+    public int convert(char W) {
+        return W - 'A' + 1;
+    }
+    
+    public void set(int r, char c, int v) {
+        String cur = "" + c + r;
+        if (sumToNum.containsKey(cur)) {
+            remove(cur);
+        }
+        // int diff = v - grid[r][c - 'A'];
+        // grid[r][c - 'A'] = v;
+        int diff = v - map.getOrDefault(cur, 0);
+        // System.out.println("set:" + cur + " " + diff + " " + v);
+        map.put(cur, v);
+        if (diff != 0 && numToSum.containsKey(cur)) {
+            update(cur, diff);
+        }
+    }
+    
+    public void remove(String point) {
+        Map<String, Integer> subMap = sumToNum.get(point);
+        for (String key : subMap.keySet()) {
+            numToSum.get(key).remove(point);
+        }
+        sumToNum.remove(point);
+    }
+    
+    public void update(String point, int diff) {
+        Map<String, Integer> subMap = numToSum.get(point);
+        for (String key : subMap.keySet()) {
+            map.put(key, map.getOrDefault(key, 0) + diff * subMap.get(key));
+            if (numToSum.containsKey(key)) {
+                update(key, diff * subMap.get(key));
+            }
+        }
+    }
+    
+    public int get(int r, char c) {
+        return map.getOrDefault("" + c + r, 0);
+        // return grid[r][c - 'A'];
+    }
+    
+    public int sum(int r, char c, String[] strs) {
+        String cur = "" + c + r;
+        if (sumToNum.containsKey(cur)) {
+            remove(cur);
+        }
+        sumToNum.putIfAbsent(cur, new HashMap<>());
+        Map<String, Integer> curMap = sumToNum.get(cur);
+        int sum = 0;
+        for (String str : strs) {
+            if (str.indexOf(":") == -1) {
+                curMap.put(str, curMap.getOrDefault(str, 0) + 1);
+                numToSum.putIfAbsent(str, new HashMap<>());
+                numToSum.get(str).put(cur, numToSum.get(str).getOrDefault(cur, 0) + 1);
+                sum += map.getOrDefault(str, 0);
+            }
+            else {
+                String[] rangeStr = str.split(":");
+                for (String ele : getRange(rangeStr[0], rangeStr[1])) {
+                    curMap.put(ele, curMap.getOrDefault(ele, 0) + 1);
+                    numToSum.putIfAbsent(ele, new HashMap<>());
+                    numToSum.get(ele).put(cur, numToSum.get(ele).getOrDefault(cur, 0) + 1);
+                    sum += map.getOrDefault(ele, 0);
+                }
+            }
+        }
+        int diff = sum - map.getOrDefault(cur, 0);
+        // System.out.println(cur + "  " + sum + " " + diff);
+        // System.out.println(sumToNum.get(cur));
+        // System.out.println(numToSum.get("A5"));
+        // System.out.println(map.get("A5"));
+        map.put(cur, sum);
+        if (diff != 0 && numToSum.containsKey(cur)) {
+            update(cur, diff);
+        }
+        // map.put(cur, sum);
+        return sum;
+    }
+    
+    public List<String> getRange(String a, String b) {
+        List<String> list = new ArrayList<>();
+        int start = Integer.parseInt(a.substring(1)), end = Integer.parseInt(b.substring(1));
+        for (char i = a.charAt(0); i <= b.charAt(0); i++) {
+            for (int j = start; j <= end; j++) {
+                list.add(new String("" + i + j));
+            }
+        }
+        return list;
+    }
+}
+
+/**
+ * Your Excel object will be instantiated and called as such:
+ * Excel obj = new Excel(H, W);
+ * obj.set(r,c,v);
+ * int param_2 = obj.get(r,c);
+ * int param_3 = obj.sum(r,c,strs);
+ */
